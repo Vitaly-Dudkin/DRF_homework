@@ -4,6 +4,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView
 
 from courses.models import Course, Lesson, Payment
+from courses.permissions import IsModerator, IsOwner
 from courses.serializers import CourseSerializer, LessonSerializer, PaymentSerializer
 
 
@@ -12,14 +13,31 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.user.groups.filter(name='moderator').exists():
+            return queryset.all()
+        elif self.request.user:
+            return queryset.filter(owner=self.request.user)
+        else:
+            return queryset.none()
+
+    def perform_create(self, serializer):
+        obj = serializer.save()
+        obj.owner = self.request.user
+        obj.save()
+
 
 class LessonCreateAPIView(generics.CreateAPIView):
     serializer_class = LessonSerializer
+    permission_classes = [IsModerator]
 
 
 class LessonListAPIView(generics.ListAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
+    permission_classes = [IsOwner & ~IsModerator]
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
@@ -34,6 +52,7 @@ class LessonUpdateAPIView(generics.UpdateAPIView):
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
     queryset = Lesson.objects.all()
+    permission_classes = [IsModerator]
 
 
 class PaymentListAPIView(ListAPIView):

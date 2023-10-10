@@ -10,3 +10,4 @@ from users.models import User
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ('pk', 'email', 'is_superuser', 'is_staff', 'username',)
+    filter_horizontal = ('groups',)
