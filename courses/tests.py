@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from courses.models import Course, Lesson
+from courses.models import Course, Lesson, Subscription
 from users.models import User
 
 
@@ -11,7 +11,7 @@ class LessonsTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create(
-            email='john',
+            email='john@mail.ru',
             password='john_snow',
             is_staff=True,
             is_superuser=False
@@ -114,4 +114,52 @@ class LessonsTestCase(APITestCase):
 class SubscriptionTestCase(APITestCase):
 
     def setUp(self):
-        pass
+        self.user = User.objects.create(
+            email="john@mail.ru",
+            password="john_snow",
+            is_staff=False,
+            is_superuser=False
+        )
+
+        self.course = Course.objects.create(
+            name="test course",
+            description="test description",
+            owner=self.user
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_subscribe_to_course(self):
+        response = self.client.get(
+            reverse("courses:subscribe_to_updates", args=[self.course.pk])
+        )
+
+        self.assertEqual(
+            response.status_code, status.HTTP_201_CREATED
+        )
+
+        self.assertEqual(
+            response.json(), {'message': f'Subscribe for course - {self.course.name}, updates !'}
+        )
+
+        is_subscribed = Subscription.objects.filter(course=self.course, user=self.user).exists()
+        self.assertEqual(
+            is_subscribed, True
+        )
+
+        response = self.client.get(
+            reverse("courses:subscribe_to_updates", args=[self.course.pk])
+        )
+
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK
+        )
+
+        self.assertEqual(
+            response.json(), {'message': f'Subscribe for course updates {self.course.name} has been cancelled!'}
+        )
+
+        is_subscribed = Subscription.objects.filter(course=self.course, user=self.user).exists()
+        self.assertEqual(
+            is_subscribed, False
+        )
