@@ -11,6 +11,7 @@ from courses.models import Course, Lesson, Payment, Subscription
 from courses.paginators import CoursesPaginator
 from courses.permissions import IsModerator, IsOwner
 from courses.serializers import CourseSerializer, LessonSerializer, PaymentSerializer, SubscriptionSerializer
+from courses.services import get_payment_link
 
 
 # Create your views here.
@@ -107,3 +108,13 @@ def subscribe_to_updates(request: HttpRequest, pk: int) -> Response:
             return Response({'message': f'Subscribe for course - {course.name}, updates !'},
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def payment_for_course(request, pk):
+    try:
+        payment_link = get_payment_link(pk)
+    except Course.DoesNotExist:
+        return Response({"error": "This course doesn't exist."}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'payment_link': payment_link})
