@@ -16,6 +16,12 @@ from courses.services import get_payment_link
 
 # Create your views here.
 class CourseViewSet(viewsets.ModelViewSet):
+    """
+       Manage courses, including creation, listing, and updates.
+
+       This viewset allows you to perform various operations related to courses,
+       such as creating new courses, listing available courses, and updating course details.
+    """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     pagination_class = CoursesPaginator
@@ -37,6 +43,9 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
+    """
+        This view allows authenticated users to create new lessons within a course.
+     """
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated, ~IsModerator]
 
@@ -47,6 +56,9 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
 
 class LessonListAPIView(generics.ListAPIView):
+    """
+      This view allows authenticated users to see all available lessons.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsOwner | IsModerator]
@@ -54,23 +66,40 @@ class LessonListAPIView(generics.ListAPIView):
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
+    """
+        This view allows users to see details of a specific lesson.
+        Access have only moderator and lesson's owner.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsOwner | IsModerator]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
+    """
+        This view allows moderator and lesson's owner to update lesson details.
+    """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsOwner | IsModerator]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
+    """
+        This view allows lesson's owner to delete a lesson.
+    """
     queryset = Lesson.objects.all()
     permission_classes = [IsOwner]
 
 
 class PaymentListAPIView(ListAPIView):
+    """
+        Retrieve a list of payments.
+
+        This view allows users to see a list of payments. It supports ordering and filtering by course and payment method.
+        - Admin users can view all payments.
+        - Authenticated users can view their own payments.
+    """
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -87,8 +116,8 @@ class PaymentListAPIView(ListAPIView):
 @permission_classes([IsAuthenticated])
 def subscribe_to_updates(request: HttpRequest, pk: int) -> Response:
     """
-    Submission to subscribe to course updates or unsubscribe.
-    Prohibited for unauthorized users
+        Submission to subscribe to course updates or unsubscribe.
+        Prohibited for unauthorized users
     """
 
     try:
@@ -112,6 +141,12 @@ def subscribe_to_updates(request: HttpRequest, pk: int) -> Response:
 
 @api_view(['GET'])
 def payment_for_course(request, pk):
+    """
+       Create a new payment session for the specified course.
+
+       This view allows authenticated users to create a new payment session for a specific course. It generates
+       a payment session with a Stripe link and returns payment link.
+    """
     try:
         payment_link = get_payment_link(pk)
     except Course.DoesNotExist:
