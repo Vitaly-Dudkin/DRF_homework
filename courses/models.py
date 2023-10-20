@@ -12,6 +12,7 @@ class Course(models.Model):
     name = models.CharField(max_length=100, verbose_name='Name')
     preview = models.ImageField(**NULLABLE, upload_to='', verbose_name='Preview')
     description = models.TextField(**NULLABLE, verbose_name='Description')
+    price = models.PositiveIntegerField(default=32000, verbose_name='Price')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Owner', **NULLABLE)
 
     def __str__(self):
@@ -45,14 +46,15 @@ class Payment(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='User')
-    date_of_payment = models.DateField(auto_now_add=True, verbose_name='Date_of_payment')
     paid_course = models.ForeignKey(Course, on_delete=models.SET_NULL, **NULLABLE, verbose_name='Paid_course')
-    paid_lesson = models.ForeignKey(Lesson, on_delete=models.SET_NULL, **NULLABLE, verbose_name='Paid_lesson')
+
+    date_of_payment = models.DateField(auto_now_add=True, verbose_name='Date_of_payment')
+
     price = models.PositiveSmallIntegerField(verbose_name='Price')
     payment_method = models.CharField(choices=payment_method, verbose_name='Payment_method')
 
     def __str__(self):
-        return f"{self.user.email} {'Course: ' + self.paid_course.name if self.paid_course else 'Lesson: ' + self.paid_lesson.name}"
+        return f"{self.date_of_payment}: {self.user} - {self.price}"
 
     class Meta:
         verbose_name = 'Payment'
