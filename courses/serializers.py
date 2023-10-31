@@ -26,7 +26,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('name', 'preview', 'description', 'lesson', 'lesson_count', 'is_subscribed')
+        fields = ("id", 'name', 'preview', 'description', 'lesson', 'lesson_count', 'is_subscribed')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
