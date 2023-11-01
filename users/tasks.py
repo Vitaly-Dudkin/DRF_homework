@@ -7,5 +7,5 @@ from users.models import User
 
 @shared_task
 def check_is_active():
-    three_months = datetime.now() - timedelta(days=90)
+    three_months = datetime.now() - timedelta(days=32)
     User.objects.filter(last_login__lt=three_months).update(is_active=False)
