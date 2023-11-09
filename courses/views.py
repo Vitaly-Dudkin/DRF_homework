@@ -12,7 +12,7 @@ from courses.paginators import CoursesPaginator
 from courses.permissions import IsModerator, IsOwner
 from courses.serializers import CourseSerializer, LessonSerializer, PaymentSerializer, SubscriptionSerializer
 from courses.services import get_payment_link
-
+from courses.tasks import get_update_notification
 
 # Create your views here.
 class CourseViewSet(viewsets.ModelViewSet):
@@ -25,6 +25,13 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     pagination_class = CoursesPaginator
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        instance = self.get_object()
+        print(instance.id)
+        get_update_notification.delay(instance.id)
+        return response
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -61,8 +68,21 @@ class LessonListAPIView(generics.ListAPIView):
     """
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
-    permission_classes = [IsOwner | IsModerator]
+    permission_classes = [IsAuthenticated]
     pagination_class = CoursesPaginator
+
+    def get_queryset(self):
+        """
+            Getting Lesson Objects based on User
+        """
+        queryset = super().get_queryset()
+
+        if self.request.user.groups.filter(name='moderator').exists():
+            return queryset.all()
+        elif self.request.user:
+            return queryset.filter(owner=self.request.user)
+        else:
+            return queryset.none()
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
