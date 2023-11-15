@@ -18,7 +18,7 @@ import stripe
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env.non_dev')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -88,7 +88,7 @@ DATABASES = {
         'USER': 'postgres',
         'HOST': 'db',
         'PORT': 5432,
-        'PASSWORD': 'mysecretpassword',
+        'PASSWORD': 'qwerty',
     }
 }
 
@@ -153,8 +153,8 @@ stripe.api_key = os.getenv('stripe.api_key')
 # Настройки для Celery
 CELERY_BEAT_SCHEDULE = {
     'task-name': {
-        'task': 'courses.tasks.check_is_active',  # Путь к задаче
-        'schedule': timedelta(minutes=60000),  # Расписание выполнения задачи (например, каждые 10 минут)
+        'task': 'courses.tasks.get_update_notification',  # Путь к задаче
+        'schedule': timedelta(hours=72),  # Расписание выполнения задачи (например, каждые 10 минут)
     },
 }
 
@@ -162,7 +162,7 @@ CELERY_BEAT_SCHEDULE = {
 CELERY_BROKER_URL = 'redis://redis:6379'  # Например, Redis, который по умолчанию работает на порту 6379
 
 # URL-адрес брокера результатов, также Redis
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
 
 # Часовой пояс для работы Celery
 CELERY_TIMEZONE = "Australia/Tasmania"
@@ -182,6 +182,6 @@ EMAIL_USE_SSL = True
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1500),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }

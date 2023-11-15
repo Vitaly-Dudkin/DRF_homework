@@ -1,5 +1,5 @@
 # Указываем базовый образ
-FROM python:3
+FROM python:3.10
 
 # Устанавливаем рабочую директорию в контейнере
 WORKDIR /app
@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Определяем команду, которая будет запускаться при запуске контейнера
-CMD ["python", "app.py"]
+#CMD ["python", "app.py"]

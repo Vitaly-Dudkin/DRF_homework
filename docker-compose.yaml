@@ -4,46 +4,66 @@ services:
 
   redis:
     image: redis
+    container_name: redis_app
     ports:
       - '6379'
 
+
+
   db:
     image: postgres
-    environment:
-      POSTGRES_PASSWORD: mysecretpassword
-      PGDATA: /var/lib/postgresql/data/pgdata
+    container_name: db_app
     ports:
       - '5432'
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env.non_dev
+    volumes:
+      - pg_data1:/var/lib/postgresql/data/pgdata
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
-  courses:
+  app:
     build: .
     tty: true
-    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env.non_dev
+    container_name: django_app
     ports:
-      - '8000:8000'
+      - '8001:8000'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+
 
   celery:
     build: .
     tty: true
-    command: celery -A config worker -l INFO
+    container_name: celery_app
+    command: sh -c "celery -A config worker -l info -S django"
     depends_on:
-      - redis
-      - courses
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
 
-  celery-beat:
+  celery_beat:
     build: .
     tty: true
-    command: celery -A config beat -l INFO -S django
+    container_name: celery_beat_app
+    command: sh -c "celery -A config beat -l info -S django"
     depends_on:
-      - redis
-      - courses
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
 
-
-
+volumes:
+  pg_data1:
